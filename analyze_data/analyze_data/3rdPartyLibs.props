@@ -5,7 +5,11 @@
     <BoostDir>D:\Work\Libraries\boost\boost_1_55_0</BoostDir>
   </PropertyGroup>
   <PropertyGroup />
-  <ItemDefinitionGroup />
+  <ItemDefinitionGroup>
+    <Link>
+      <AdditionalLibraryDirectories>$(BoostDir)\stage\lib</AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>
   <ItemGroup>
     <BuildMacro Include="BoostDir">
       <Value>$(BoostDir)</Value>
