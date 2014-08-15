@@ -22,7 +22,10 @@ TIME_THRESH = 60; % seconds
 X_TOLERANCE = 2000; % meters
 Y_TOLERANCE = 2000; % meters
 T_TOLERANCE = 120; % 3 minutes 
-    
+
+%%
+command=['!analyze_data.exe -mode info -in "' full_datafile '" -out "here.txt" ']
+eval(command); 
     
 %%
 mkdir('samples'); 
@@ -36,8 +39,7 @@ for ii=1:number_of_samples
     sample_file = fullfile(pwd, 'samples', sample_file);
     
     %% read data
-    ds = dataset('File', sample_file, ...
-        'Format','%s%s%s%s%s%s%s%f%f%f%f%f%f%f','Delimiter',',','ReturnOnError',0);
+    ds = dataset('File', sample_file, 'Format','%s%s%s%s%s%s%s%f%f%f%f%f%f%f','Delimiter',',','ReturnOnError',0);
 
     myDB.passenger_count = ds.passenger_count;
     myDB.trip_time_in_secs = ds.trip_time_in_secs;
