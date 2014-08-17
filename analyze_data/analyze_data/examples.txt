@@ -1,0 +1,7 @@
+-mode crop -in "D:\Work\Data\save-a-ride\trip_data_11.csv" -time-start 100 -time-end 200 -o "here.csv"
+-mode info -in "D:\Fichiers\this_year\this_month\4yaniv\data\trip_data_11.csv\trip_data_11.csv" -out "here.txt" 
+-mode info -in "D:\Work\save-a-ride\analyze_data\analyze_data\first_100.csv" -out "here.txt" 
+-mode crop -in "D:\Work\Data\save-a-ride\trip_data_11.csv" -time-start 1383264000 -time-end 1383267600 -o "trip_data_11-cropped.csv"
+-mode crop -in "D:\Work\save-a-ride\trip_data_11_subsampled.csv" -time-start 1383264000 -time-end 1383267600 -o "trip_data_11-cropped.csv"
+-mode crop -in "D:\Work\save-a-ride\trip_data_11_subsampled.csv" -time-start 1383591000 -time-end 1383594600 -o "trip_data_11_subsampled-cropped.csv" -count 10000
+-mode split -in "D:\Work\Data\save-a-ride\trip_data_11.csv" -time-start 1383264000 -interval 86400 -o trip_data_11-split -append false -count 100000

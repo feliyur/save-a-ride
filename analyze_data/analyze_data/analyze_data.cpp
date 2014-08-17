@@ -108,59 +108,13 @@ try {
 	case CommandType::DataInfo:
 		dataInfo();
 		break;
+	case CommandType::SplitData:
+		splitData(); 
+		break;
 	default:
 		cout << "Unrecognized command! id '" << m_RequestedCommand << "' " << endl;
 		throw handled_exception();
 	}
-
-	//unsigned int seed((unsigned int)time(0));
-	//if (argc >= 4)
-	//	seed = boost::lexical_cast<unsigned int>(argv[3]);
-
-	//generator.seed(seed);
-
-	//auto dice = std::bind(distribution, generator);
-	////{
-	////	ofstream ofile("check_random.csv");
-	////	for (int ii = 0; ii < 100000; ++ii)
-	////		ofile << dice() << endl;
-	////}
-
-	//std::string sourcefile(argv[1]);
-	//auto num_samples = boost::lexical_cast<int>(argv[2]);
-	//if (num_samples < 0)
-	//{
-	//	cout << "Invalid num of samples!" << endl;
-	//	return 0;
-	//}
-
-	////auto filepath = "D:\\Fichiers\\this_year\\this_month\\4yaniv\\trip_data_8.csv\\trip_data_8.csv"; 
-	//auto filepath(sourcefile.c_str());
-	//ifstream ifile(filepath);
-	//if (ifile.fail())
-	//{
-	//	cout << "Failed reading from file '" << filepath << "'. " << endl;
-	//	return 0;
-	//}
-
-	////auto num_lines = std::count(std::istreambuf_iterator<char>(ifile), std::istreambuf_iterator<char>(), '\n'); 
-
-	//std::vector<int> idx(num_samples);
-	//std::iota(idx.begin(), idx.end(), 0);
-
-	//ofstream ofile("first_" + boost::lexical_cast<std::string>(num_samples)+".csv");
-	//subsample(ifile, idx.begin(), idx.end(), ofile);
-
-	////std::unique_ptr<char[]> buff(new char[ELEMS]);
-	////std::fill_n(buff.get(), ELEMS, 0);
-
-	////int ii(0); 
-	////for (ii = 0; !ifile.eof(); ++ii)
-	////{
-	////	ifile.getline(buff.get(), ELEMS);
-	////	//cout << buff.get() << endl; 
-	////}
-	////cout << "Has " << num_lines << " rows. " << endl;
 	return 0;
 }
 catch (handled_exception&)
@@ -168,6 +122,22 @@ catch (handled_exception&)
 	return 0;
 }
 
+namespace boost {
+	template<>
+	bool lexical_cast<bool, std::string>(const std::string& arg) {
+		std::istringstream ss(arg);
+		bool b;
+		ss >> std::boolalpha >> b;
+		return b;
+	}
+
+	template<>
+	std::string lexical_cast<std::string, bool>(const bool& b) {
+		std::ostringstream ss;
+		ss << std::boolalpha << b;
+		return ss.str();
+	}
+}
 
 void AnalyzeData::parseArguments(int argc, char const* argv[])
 {
@@ -215,6 +185,10 @@ void AnalyzeData::parseArguments(int argc, char const* argv[])
 			m_InfileHasHeader = false;
 		else if ("-count" == param_name)
 			m_RecordCountReportInterval = boost::lexical_cast<unsigned int>(param_val);
+		else if ("-append" == param_name)
+			m_AppendOutFile = boost::lexical_cast<bool>(param_val);
+		else if ("-interval" == param_name)
+			m_Interval = boost::lexical_cast<double>(param_val); 
 		else {
 			cout << "Unrecognized parameter '" << param_name << "' " << endl;
 			throw handled_exception();
@@ -253,10 +227,12 @@ AnalyzeData::CommandType AnalyzeData::parseMode(std::string cmd)
 	std::transform(cmd.begin(), cmd.end(), cmd.begin(), ::tolower);
 	if ("sample" == cmd)
 		return CommandType::RandomSample;
-	else if ("crop" == cmd)
+	else if ("crop"  == cmd)
 		return CommandType::CropData;
-	else if ("info" == cmd)
+	else if ("info"  == cmd)
 		return CommandType::DataInfo;
+	else if ("split" == cmd)
+		return CommandType::SplitData; 
 
 	return CommandType::NoCommand;
 }
@@ -271,6 +247,14 @@ void AnalyzeData::randomSample()
 
 	ifstream ifile = loadInFile();
 	ofstream ofile = loadOutFile();
+
+	if (m_InfileHasHeader)
+	{
+		std::string line;
+		std::getline(ifile, line);
+		ofile << line << endl;
+		//ist.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+	}
 
 	std::vector<int> idx(m_NumSamples.get());
 	std::iota(idx.begin(), idx.end(), 0);
@@ -289,9 +273,16 @@ void AnalyzeData::cropData()
 std::ostream& AnalyzeData::filterRecords(std::ostream& ost, std::istream& ist)
 {
 	if (m_InfileHasHeader)
-		ist.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+	{
+		std::string line; 
+		std::getline(ist, line); 
+		ost << line << endl;
+		//ist.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+	}
 
 	DataFormat data_line;
+
+	int num_records = 0; 
 
 	while (ist)
 	{
@@ -306,7 +297,12 @@ std::ostream& AnalyzeData::filterRecords(std::ostream& ost, std::istream& ist)
 			inside_limits = inside_limits && data_line.m_EndTime <= m_TimeEnd.get();
 
 		if (inside_limits)
-			ost << data_line;
+			ost << data_line << endl;
+
+		++num_records; 
+
+		if (m_RecordCountReportInterval && (num_records%m_RecordCountReportInterval.get() == 0))
+			cout << "processed " << num_records << " records" << endl;
 
 		//// Write the time to stdout.
 		//cout << "Full Time:\t" << ldt.to_string() << endl;
@@ -375,6 +371,55 @@ void AnalyzeData::dataInfo()
 		<< EPOCH_DATE + boost::posix_time::seconds(min_start_time) << "," << EPOCH_DATE + boost::posix_time::seconds(max_end_time) << "," << num_records << endl;
 }
 
+
+void AnalyzeData::splitData()
+{
+	if (!m_TimeStart || !m_Interval || !m_Outfile)
+	{
+		cout << "cannot split data: start time, interval or out filename not specified.  " << endl;
+		throw handled_exception();
+	}
+
+	auto ifile = loadInFile();
+
+	auto out_filename = m_Outfile.get();
+
+	DataFormat record;
+	const auto BASE_TIME = m_TimeStart.get();
+	const double INTERVAL = m_Interval.get();
+
+	std::map<long, std::unique_ptr<std::ostream>> outfiles;
+
+	std::string header;
+	if (m_InfileHasHeader)
+		std::getline(ifile, header);
+
+	int num_records = 0; 
+
+	while (ifile >> std::ws)
+	{
+		ifile >> record; 
+		long idx = long(std::floor(double(record.m_StartTime - BASE_TIME) / INTERVAL)); 
+
+		auto it = outfiles.find(idx); 
+		if (outfiles.end() == it)
+		{
+			auto outfilepath = out_filename + "_" + boost::lexical_cast<std::string>(idx) + ".csv"; 
+			it = outfiles.emplace(std::make_pair(idx, std::unique_ptr<std::ostream>(new ofstream(outfilepath.c_str(), m_AppendOutFile ? std::ios_base::app : std::ios_base::out)))).first;
+			if (m_InfileHasHeader)
+				(*it->second) << header << endl; 
+		}
+
+		(*it->second) << record << endl; 
+
+		++num_records; 
+
+		if (m_RecordCountReportInterval && (num_records%m_RecordCountReportInterval.get() == 0))
+			cout << "processed " << num_records << " records" << endl;
+	}
+}
+
+
 ifstream AnalyzeData::loadInFile()
 {
 	if (!m_Infile || !boost::filesystem::exists(m_Infile.get()) || !boost::filesystem::is_regular_file(m_Infile.get()))
@@ -405,7 +450,7 @@ ofstream AnalyzeData::loadOutFile()
 
 	std::string outfilepath(m_Outfile.get());
 
-	ofstream ofile(outfilepath.c_str(), std::ios_base::app);
+	ofstream ofile(outfilepath.c_str(), m_AppendOutFile ? std::ios_base::app : std::ios_base::out);
 	if (ofile.fail())
 	{
 		cout << "Failed opening file for writing \"" << outfilepath << "\". " << endl;

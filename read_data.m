@@ -2,7 +2,8 @@ addpath utils
 
 %% Parameters
 % Database and sampling
-full_datafile = 'D:\Fichiers\this_year\this_month\4yaniv\data\trip_data_11.csv\trip_data_11.csv'; 
+% full_datafile = 'D:\Fichiers\this_year\this_month\4yaniv\data\trip_data_11.csv\trip_data_11.csv'; 
+full_datafile = 'D:\Work\Data\save-a-ride\splits\trip_data_1\trip_data_1-split_45.csv'; 
 sample_size = 1000; 
 number_of_samples = 1; 
 
@@ -19,24 +20,25 @@ TIME_THRESH = 60; % seconds
 
 % Tolerance for grouping
 % Grouping is done in a grid, cell size is determined here 
-X_TOLERANCE = 2000; % meters
-Y_TOLERANCE = 2000; % meters
+X_TOLERANCE = 200; % meters
+Y_TOLERANCE = 200; % meters
 T_TOLERANCE = 120; % 3 minutes 
 
-%%
-command=['!analyze_data.exe -mode info -in "' full_datafile '" -out "here.txt" ']
-eval(command); 
+% %%
+% command=['!analyze_data.exe -mode info -in "' full_datafile '" -out "here.txt" ']
+% eval(command); 
     
 %%
 mkdir('samples'); 
 
 for ii=1:number_of_samples
-    %% Create a sample
-    eval(['!analyze_data "' full_datafile '" ', num2str(sample_size)]);
-%     [PATHSTR,NAME,EXT]=fileparts(full_datafile);
-    sample_file = ['first_' num2str(sample_size), '.csv']; 
-    movefile(sample_file, 'samples');
-    sample_file = fullfile(pwd, 'samples', sample_file);
+%     %% Create a sample
+%     eval(['!analyze_data "' full_datafile '" ', num2str(sample_size)]);
+% %     [PATHSTR,NAME,EXT]=fileparts(full_datafile);
+%     sample_file = ['first_' num2str(sample_size), '.csv']; 
+%     movefile(sample_file, 'samples');
+%     sample_file = fullfile(pwd, 'samples', sample_file);
+    sample_file = full_datafile; 
     
     %% read data
     ds = dataset('File', sample_file, 'Format','%s%s%s%s%s%s%s%f%f%f%f%f%f%f','Delimiter',',','ReturnOnError',0);
