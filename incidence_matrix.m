@@ -21,6 +21,9 @@ incM.num_dropoff_y = ceil((myDB.max_dropoff_y-incM.base_dropoff_y)/incM.y_tolera
 incM.num_dropoff_time = ceil((myDB.max_dropoff_t-incM.base_dropoff_time)/incM.t_tolerance); 
 
 % incM.num_trips = myDB.num_trips; 
+incM.num_cells = incM.num_pickup_x*incM.num_pickup_y*incM.num_pickup_time * ...
+                    incM.num_dropoff_x*incM.num_dropoff_y*incM.num_dropoff_time * ...
+                        myDB.num_trips; 
 
 incM.M = ndSparse.build([1+round((myDB.pickup_x-incM.base_pickup_x)/incM.x_tolerance), ...1
                    1+round((myDB.dropoff_x-incM.base_dropoff_x)/incM.x_tolerance), ...

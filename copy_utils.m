@@ -27,8 +27,8 @@ function copy_utils()
     TARGET_DIR = 'D:\Work\Data\save-a-ride\splits'; 
     mkdir(TARGET_DIR); 
     
-    SPLIT_INTERVAL = 3600*2; % two hours [seconds]
-    for ii=3:numel(database_files)
+    SPLIT_INTERVAL = 3600; % one hour [seconds]
+    for ii=1:numel(database_files)
         % Load info
         [PATHSTR,NAME,EXT] = fileparts(database_files{ii});
         load(NAME); 
@@ -42,6 +42,15 @@ function copy_utils()
         mkdir(cur_target_dir); 
         movefile([NAME '-split_*.csv'], cur_target_dir); 
         
+        %
+        filelist = dir(fullfile(cur_target_dir, '*-split_*.csv'));
+        for jj=1:numel(filelist)
+            disp(['Processing split ' num2str(jj) ' of ' num2str(numel(filelist))]); 
+            myDB = load_dataset(fullfile(cur_target_dir, filelist(jj).name));
+            [PATHSTR,NAME,EXT] = fileparts(filelist(jj).name);
+            save(fullfile(cur_target_dir, [NAME '.mat']), 'myDB'); 
+            
+        end
 %         %% Delete split files
 %         delete([NAME '-split_*.csv']); 
     end
