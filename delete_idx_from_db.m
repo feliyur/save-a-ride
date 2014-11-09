@@ -1,6 +1,6 @@
 function myDB = delete_idx_from_db(myDB, ind)
 
-fprintf('Cleaning %i bad records\n',sum(ind));
+% fprintf('Cleaning %i bad records\n',sum(ind));
 % myDB.delta_dist(ind) = [];
 myDB.dropoff_latitude(ind) = [];
 myDB.dropoff_longitude(ind) = [];
