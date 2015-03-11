@@ -1,4 +1,13 @@
 function generate_stats(out_dir, XY_TOLERANCE_VEC, T_TOLERANCE_VEC, MAX_PASSANGER_COUNT)
+% Usage example: 
+%
+% XY_TOLERANCE_VEC = 150:50:4000; 
+% T_TOLERANCE_VEC = [120, 300]; 
+% MAX_PASSANGER_COUNT = 4; 
+% 
+% generate_stats('D:\Work\Data\save-a-ride\stats\4_passanger_max', XY_TOLERANCE_VEC, T_TOLERANCE_VEC, MAX_PASSANGER_COUNT); 
+%
+
 
 if ~exist(out_dir, 'dir')
     mkdir(out_dir); 

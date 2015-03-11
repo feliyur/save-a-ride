@@ -1,24 +1,38 @@
 function [myDB, incM] = incidence_matrix(myDB, x_tolerance, y_tolerance, t_tolerance)
 
+MAX_T_TOLERANCE = 3600*24*365*1000;
+
 incM.x_tolerance = x_tolerance; % meters
 incM.y_tolerance = y_tolerance; % meters
 incM.t_tolerance = t_tolerance; % 3 minutes 
 
-incM.base_pickup_x = floor(myDB.min_pickup_x/incM.x_tolerance)*incM.x_tolerance;
-incM.base_pickup_y = floor(myDB.min_pickup_y/incM.y_tolerance)*incM.y_tolerance; 
-incM.base_pickup_time = floor(myDB.min_pickup_t/incM.t_tolerance)*incM.t_tolerance; 
+base_x = min(floor(myDB.min_pickup_x/incM.x_tolerance)*incM.x_tolerance, floor(myDB.min_dropoff_x/incM.x_tolerance)*incM.x_tolerance); 
+base_y = min(floor(myDB.min_pickup_y/incM.y_tolerance)*incM.y_tolerance, floor(myDB.min_dropoff_y/incM.y_tolerance)*incM.y_tolerance); 
 
-incM.base_dropoff_x = floor(myDB.min_dropoff_x/incM.x_tolerance)*incM.x_tolerance;  
-incM.base_dropoff_y = floor(myDB.min_dropoff_y/incM.y_tolerance)*incM.y_tolerance; 
-incM.base_dropoff_time = floor(myDB.min_dropoff_t/incM.t_tolerance)*incM.t_tolerance; 
+t_tolerance_or_0 = ~isinf(incM.t_tolerance)*min(incM.t_tolerance, MAX_T_TOLERANCE); 
+base_time = min(floor(myDB.min_pickup_t/incM.t_tolerance)*t_tolerance_or_0, floor(myDB.min_dropoff_t/incM.t_tolerance)*t_tolerance_or_0); 
 
-incM.num_pickup_x = ceil((myDB.max_pickup_x-incM.base_pickup_x)/incM.x_tolerance); 
-incM.num_pickup_y = ceil((myDB.max_pickup_y-incM.base_pickup_y)/incM.y_tolerance); 
-incM.num_pickup_time = ceil((myDB.max_pickup_t-incM.base_pickup_time)/incM.t_tolerance);
+incM.base_pickup_x = base_x; 
+incM.base_pickup_y = base_y; 
+incM.base_pickup_time = base_time; 
 
-incM.num_dropoff_x = ceil((myDB.max_dropoff_x-incM.base_dropoff_x)/incM.x_tolerance); 
-incM.num_dropoff_y = ceil((myDB.max_dropoff_y-incM.base_dropoff_y)/incM.y_tolerance); 
-incM.num_dropoff_time = ceil((myDB.max_dropoff_t-incM.base_dropoff_time)/incM.t_tolerance); 
+incM.base_dropoff_x = base_x;  
+incM.base_dropoff_y = base_y; 
+incM.base_dropoff_time = base_time; 
+
+num_x = max(1+round((max(myDB.pickup_x)-incM.base_pickup_x)/incM.x_tolerance), 1+round((max(myDB.dropoff_x)-incM.base_dropoff_x)/incM.x_tolerance)); 
+num_y = max(1+round((max(myDB.pickup_y)-incM.base_pickup_y)/incM.y_tolerance), 1+round((max(myDB.dropoff_y)-incM.base_dropoff_y)/incM.y_tolerance)); 
+num_time = max(1+round((max(myDB.pickup_time)-incM.base_pickup_time)/incM.t_tolerance)); 
+
+
+
+incM.num_pickup_x = num_x; 
+incM.num_pickup_y = num_y; 
+incM.num_pickup_time = num_time;
+
+incM.num_dropoff_x = num_x; 
+incM.num_dropoff_y = num_y; 
+incM.num_dropoff_time = num_time; 
 
 % % incM.num_trips = myDB.num_trips; 
 if isempty(myDB.passenger_count)

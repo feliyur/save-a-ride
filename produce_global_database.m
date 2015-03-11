@@ -25,7 +25,7 @@ for ii=1:numel(database_files)
     load(NAME); 
 
     % Split datafile
-    eval(['!analyze_data.exe -mode split -in "' database_files{ii} '" -time-start ' num2str(info.min_start_datenum) ' -interval ' num2str(SPLIT_INTERVAL) ' -o ' NAME '-split -append false -count 100000']); 
+    eval(['analyze_data -mode split -in "' database_files{ii} '" -time-start ' num2str(info.min_start_datenum) ' -interval ' num2str(SPLIT_INTERVAL) ' -o ' NAME '-split -append false -count 100000']); 
 
     % Copy splits
     cur_target_dir = fullfile(TARGET_DIR, NAME); 
